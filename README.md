@@ -23,4 +23,6 @@ $ yarn start
 
 - [ ] translate user IDs to usernames
 - [ ] translate channel IDs to channel names, and link to them
+- [ ] emojis -> images or Unicode
+- [ ] parse "text" plaintext messages into something rich (clickable links, code and so on)
 
