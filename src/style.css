@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.show-slowly {
+  opacity: 0;
+  animation: show-slowly 5s ease-in-out 1;
+  animation-fill-mode: forwards;
+}
+
+@keyframes show-slowly {
+  0%, 50% { opacity: 0; }
+  100%    { opacity: 1; }
+}
