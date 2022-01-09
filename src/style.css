@@ -4,7 +4,7 @@
 
 .show-slowly {
   opacity: 0;
-  animation: show-slowly 5s ease-in-out 1;
+  animation: show-slowly 2s ease-in-out 1;
   animation-fill-mode: forwards;
 }
 

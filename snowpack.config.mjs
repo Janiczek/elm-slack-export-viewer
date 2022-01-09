@@ -14,4 +14,7 @@ export default {
     port: 3000,
     tailwindConfig: './tailwind.config.js',
   },
+  packageOptions: {
+    external: ["fs/promises"],
+  },
 };

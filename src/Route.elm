@@ -1,7 +1,7 @@
 module Route exposing (Route(..), fromUrl, toUrl)
 
 import Data.Channel as Channel
-import Data.YearMonthDay exposing (YearMonthDay)
+import Data.YearMonthDay as YearMonthDay exposing (YearMonthDay)
 import Url exposing (Url)
 import Url.Parser as Parser exposing ((</>), Parser)
 
@@ -23,15 +23,8 @@ toUrl route =
         ChannelRoute name ->
             "/" ++ name
 
-        ChannelDayRoute name ( year, month, day ) ->
-            "/"
-                ++ name
-                ++ "/"
-                ++ String.fromInt year
-                ++ "/"
-                ++ String.fromInt month
-                ++ "/"
-                ++ String.fromInt day
+        ChannelDayRoute name ymd ->
+            "/" ++ name ++ "/" ++ YearMonthDay.toString ymd
 
 
 fromUrl : Url -> Route
