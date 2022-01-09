@@ -676,7 +676,7 @@ richTextElementView element =
 
         Emoji emoji ->
             Html.code
-                [ Attrs.class "border border-gray-300 px-1 text-[14px] bg-gray-100 text-gray-600" ]
+                [ Attrs.class "border border-gray-300 px-1 text-[14px] bg-gray-100 text-red-600" ]
                 [ Html.text <| ":" ++ emoji ++ ":" ]
 
         Markdown markdown ->
