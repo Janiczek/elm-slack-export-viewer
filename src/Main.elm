@@ -5,24 +5,26 @@ import Browser
 import Browser.Dom
 import Browser.Navigation
 import Data.Channel as Channel exposing (Channel)
-import Data.Message as Message
+import Data.Message
     exposing
-        ( Block(..)
-        , File
+        ( File
         , FilesMessageData
         , Message(..)
         , Reaction
-        , RichTextElement(..)
         , SlackbotMessageData
         , UserMessageData
+        )
+import Data.Message.Block as Block
+    exposing
+        ( Accessory(..)
+        , Block(..)
+        , RichTextElement(..)
         )
 import Data.YearMonthDay as YearMonthDay exposing (YearMonthDay)
 import Dict exposing (Dict)
 import Html exposing (Html)
 import Html.Attributes as Attrs
-import Html.Events as Events
 import Http exposing (Error(..))
-import Json.Decode exposing (Decoder)
 import RemoteData exposing (RemoteData(..), WebData)
 import Route exposing (Route(..))
 import Task
@@ -583,7 +585,7 @@ wasEditedView wasEdited =
 blocksView : List Block -> Html Msg
 blocksView blocks =
     Html.div
-        [ Attrs.class "flex flex-row gap-2" ]
+        [ Attrs.class "flex flex-col gap-2" ]
         (List.map blockView blocks)
 
 
@@ -592,6 +594,59 @@ blockView block =
     case block of
         RichText elements ->
             Html.div [] (List.map richTextElementView elements)
+
+        Header header ->
+            Html.div
+                [ Attrs.class "text-xl font-bold" ]
+                [ Html.text header ]
+
+        Image { url, alt } ->
+            Html.div
+                [ Attrs.class "max-w-[200px] max-h-[200px]" ]
+                [ Html.img
+                    [ Attrs.src url
+                    , Attrs.alt alt
+                    , Attrs.class "object-contain w-full h-full"
+                    ]
+                    []
+                ]
+
+        Divider ->
+            Html.hr [] []
+
+        Section { content, accessory } ->
+            Html.div
+                [ Attrs.class "flex flex-col gap-2" ]
+                [ Html.div
+                    [ Attrs.class "flex flex-col gap-2" ]
+                    (List.map richTextElementView content)
+                , case accessory of
+                    Nothing ->
+                        Html.text ""
+
+                    Just (ButtonAccessory { text, url }) ->
+                        Html.a
+                            [ Attrs.class "border px-2 bg-gray-300 cursor-pointer"
+                            , Attrs.href url
+                            ]
+                            [ Html.text text ]
+
+                    Just (ImageAccessory { url, alt }) ->
+                        Html.div
+                            [ Attrs.class "max-w-[200px] max-h-[200px]" ]
+                            [ Html.img
+                                [ Attrs.src url
+                                , Attrs.class "object-contain w-full h-full"
+                                , Attrs.alt alt
+                                ]
+                                []
+                            ]
+                ]
+
+        Context elements ->
+            Html.div
+                [ Attrs.class "flex flex-col gap-2" ]
+                (List.map richTextElementView elements)
 
 
 richTextElementView : RichTextElement -> Html Msg
@@ -610,8 +665,38 @@ richTextElementView element =
                 [ Attrs.class "font-mono text-[14px] px-3 py-2 border-gray-300 border bg-gray-100 rounded whitespace-pre-wrap break-all overflow-x-hidden" ]
                 (List.map richTextElementView elements)
 
-        _ ->
-            debugView "element" element
+        User { userId } ->
+            Html.text <| "@" ++ userId
+
+        Block.Channel { channelId } ->
+            Html.text <| "#" ++ channelId
+
+        Emoji emoji ->
+            Html.text <| ":" ++ emoji ++ ":"
+
+        Markdown markdown ->
+            Html.text markdown
+
+        InlineCode text ->
+            Html.code
+                [ Attrs.class "border border-gray-300 px-1 bg-gray-100" ]
+                [ Html.text text ]
+
+        Quote elements ->
+            Html.blockquote
+                [ Attrs.class "border-l-2 border-gray-500 px-2 py-1 bg-gray-200" ]
+                (List.map richTextElementView elements)
+
+        Color hex ->
+            Html.span
+                [ Attrs.class "inline-flex m-1 gap-1 items-baseline" ]
+                [ Html.div
+                    [ Attrs.class "w-[1em] h-[1em]"
+                    , Attrs.style "background-color" hex
+                    ]
+                    []
+                , Html.text hex
+                ]
 
 
 filesView : List File -> Html Msg
@@ -688,7 +773,7 @@ videoFileView =
 otherFileView : File -> Html Msg
 otherFileView =
     genericFileView
-        (\file ->
+        (\_ ->
             Html.div
                 [ Attrs.class "font-bold text-[14px]" ]
                 [ Html.text "File" ]
@@ -747,7 +832,7 @@ userMessageView message =
 slackbotMessageView : SlackbotMessageData -> Html Msg
 slackbotMessageView message =
     genericMessageView
-        { blocks = Message.textToBlocks message.text
+        { blocks = Block.textToBlocks message.text
         , files = []
         , reactions = message.reactions
         , username = Just "slackbot"
@@ -760,7 +845,7 @@ slackbotMessageView message =
 filesMessageView : FilesMessageData -> Html Msg
 filesMessageView message =
     genericMessageView
-        { blocks = Message.textToBlocks message.text
+        { blocks = Block.textToBlocks message.text
         , files = message.files
         , reactions = message.reactions
         , username = Nothing

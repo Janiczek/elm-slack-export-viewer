@@ -9,7 +9,7 @@ import Data.Channel as Channel exposing (Channel)
 import Data.Message as Message exposing (Message)
 import Data.YearMonthDay as YearMonthDay exposing (YearMonthDay)
 import Http
-import Json.Decode as Decode exposing (Decoder)
+import Json.Decode as Decode
 
 
 type Action

@@ -1,16 +1,14 @@
 module Data.Message exposing
-    ( Block(..)
-    , File
+    ( File
     , FilesMessageData
     , Message(..)
     , Reaction
-    , RichTextElement(..)
     , SlackbotMessageData
     , UserMessageData
     , decoder
-    , textToBlocks
     )
 
+import Data.Message.Block as Block exposing (Block)
 import Json.Decode as Decode exposing (Decoder)
 import Time exposing (Posix)
 
@@ -65,19 +63,6 @@ type alias Reaction =
     }
 
 
-type Block
-    = RichText (List RichTextElement)
-
-
-type RichTextElement
-    = Text String
-    | Link { url : String, text : String }
-    | InlineCode String -- type=text {style: code}
-    | Emoji String
-    | Quote (List RichTextElement)
-    | Preformatted (List RichTextElement)
-
-
 {-| This Maybe is a way of being able to filter out "channel\_join" and other messages
 -}
 decoder : Decoder (Maybe Message)
@@ -110,7 +95,7 @@ decoder =
 userMessageDecoder : Decoder Message
 userMessageDecoder =
     Decode.map7 UserMessageData
-        blocksDecoder
+        Block.blocksDecoder
         nameDecoder
         (Decode.at [ "user_profile", "image_72" ] Decode.string)
         reactionsDecoder
@@ -214,67 +199,3 @@ reactionDecoder =
     Decode.map2 Reaction
         (Decode.field "name" Decode.string)
         (Decode.field "count" Decode.int)
-
-
-blocksDecoder : Decoder (List Block)
-blocksDecoder =
-    {- Either we have "blocks" field with rich text blocks or we have just
-       plaintext "text" which we can convert to [RichText [Text string]]
-    -}
-    Decode.oneOf
-        [ Decode.field "blocks" (Decode.list blockDecoder)
-        , Decode.field "text" Decode.string
-            |> Decode.map textToBlocks
-        ]
-
-
-blockDecoder : Decoder Block
-blockDecoder =
-    Decode.field "type" Decode.string
-        |> Decode.andThen
-            (\type_ ->
-                case type_ of
-                    "rich_text" ->
-                        richTextBlockDecoder
-
-                    _ ->
-                        Decode.fail <| "Unknown block type: '" ++ type_ ++ "'"
-            )
-
-
-richTextBlockDecoder : Decoder Block
-richTextBlockDecoder =
-    Decode.field "elements" (Decode.list richTextElementDecoder)
-        |> Decode.map (List.concat >> RichText)
-
-
-richTextElementDecoder : Decoder (List RichTextElement)
-richTextElementDecoder =
-    Decode.field "type" Decode.string
-        |> Decode.andThen
-            (\type_ ->
-                case type_ of
-                    "rich_text_section" ->
-                        Decode.field "elements" (Decode.list richTextElementDecoder)
-                            |> Decode.map List.concat
-
-                    "rich_text_preformatted" ->
-                        Decode.field "elements" (Decode.list richTextElementDecoder)
-                            |> Decode.map (List.concat >> Preformatted >> List.singleton)
-
-                    "text" ->
-                        Decode.field "text" Decode.string
-                            |> Decode.map (Text >> List.singleton)
-
-                    _ ->
-                        let
-                            _ =
-                                Debug.log "unknown" type_
-                        in
-                        Decode.fail <| "Unknown rich text element type: '" ++ type_ ++ "'"
-            )
-
-
-textToBlocks : String -> List Block
-textToBlocks text =
-    [ RichText [ Text text ] ]
