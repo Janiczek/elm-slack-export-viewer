@@ -675,7 +675,9 @@ richTextElementView element =
             Html.text <| "#" ++ channelId
 
         Emoji emoji ->
-            Html.text <| ":" ++ emoji ++ ":"
+            Html.code
+                [ Attrs.class "border border-gray-300 px-1 text-[14px] bg-gray-100 text-gray-600" ]
+                [ Html.text <| ":" ++ emoji ++ ":" ]
 
         Markdown markdown ->
             Html.text markdown
