@@ -1,5 +1,7 @@
 # Elm Slack export viewer
 
+<img src="https://raw.github.com/Janiczek/elm-slack-export-viewer/master/screenshot.png" alt="Screenshot">
+
 Expects the Slack export in `/export/`, eg.
 
 ```
@@ -10,6 +12,12 @@ Expects the Slack export in `/export/`, eg.
 ```
 
 Before running the Elm app run `node list-days.mjs` to generate `days.json` files inside the channels.
+
+```
+$ yarn
+$ node list-days.mjs
+$ yarn start
+```
 
 ## TODO
 
