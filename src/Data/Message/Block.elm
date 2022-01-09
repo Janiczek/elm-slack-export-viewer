@@ -230,11 +230,9 @@ richTextElementDecoder =
                             |> Decode.map (Markdown >> List.singleton)
 
                     "link" ->
-                        Decode.map2 LinkData
+                        Decode.map2 (\url text -> LinkData url (Maybe.withDefault url text))
                             (Decode.field "url" Decode.string)
-                            (Decode.maybe (Decode.field "text" Decode.string)
-                                |> Decode.map (Maybe.withDefault "")
-                            )
+                            (Decode.maybe (Decode.field "text" Decode.string))
                             |> Decode.map (Link >> List.singleton)
 
                     "emoji" ->

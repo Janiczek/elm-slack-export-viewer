@@ -657,7 +657,10 @@ richTextElementView element =
 
         Link { url, text } ->
             Html.a
-                [ Attrs.href url ]
+                [ Attrs.href url
+                , Attrs.class "underline text-sky-600 hover:text-sky-800 hover:bg-sky-100"
+                , Attrs.target "_blank"
+                ]
                 [ Html.text text ]
 
         Preformatted elements ->
@@ -679,7 +682,7 @@ richTextElementView element =
 
         InlineCode text ->
             Html.code
-                [ Attrs.class "border border-gray-300 px-1 bg-gray-100" ]
+                [ Attrs.class "border border-gray-300 px-1 text-[14px] bg-gray-100" ]
                 [ Html.text text ]
 
         Quote elements ->
