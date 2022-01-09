@@ -605,6 +605,11 @@ richTextElementView element =
                 [ Attrs.href url ]
                 [ Html.text text ]
 
+        Preformatted elements ->
+            Html.div
+                [ Attrs.class "font-mono text-[14px] px-3 py-2 border-gray-300 border bg-gray-100 rounded whitespace-pre-wrap break-all overflow-x-hidden" ]
+                (List.map richTextElementView elements)
+
         _ ->
             debugView "element" element
 
@@ -618,33 +623,93 @@ filesView files =
 
 fileView : File -> Html Msg
 fileView file =
-    case file.mimetype of
-        "image/png" ->
-            imageFileView file
+    if String.startsWith "image/" file.mimetype then
+        imageFileView file
 
-        _ ->
-            debugView "unsupported file" file
+    else if String.startsWith "video/" file.mimetype then
+        videoFileView file
+
+    else
+        -- text/, audio/, application/, and who knows what else
+        otherFileView file
+
+
+humanReadableFilesize : Int -> String
+humanReadableFilesize bytes =
+    let
+        withTwoDecimalPlaces : Float -> String
+        withTwoDecimalPlaces float =
+            (toFloat (floor (float * 100)) / 100)
+                |> String.fromFloat
+    in
+    if bytes < 1024 then
+        String.fromInt bytes ++ " B"
+
+    else if bytes < 1048576 then
+        withTwoDecimalPlaces (toFloat bytes / 1024) ++ " KB"
+
+    else
+        withTwoDecimalPlaces (toFloat bytes / 1048576) ++ " MB"
 
 
 imageFileView : File -> Html Msg
-imageFileView file =
-    Html.div
-        [ Attrs.class "flex flex-col text-[12px] text-gray-600 p-2 border-2 rounded border-orange-400 bg-orange-300 " ]
-        [ Html.div
-            [ Attrs.class "max-w-[200px] max-h-[200px] cursor-pointer hover:ring" ]
-            [ Html.a
-                [ Attrs.href file.url
-                , Attrs.target "_blank"
-                ]
+imageFileView =
+    genericFileView
+        (\file ->
+            Html.div
+                [ Attrs.class "max-w-[200px] max-h-[200px]" ]
                 [ Html.img
                     [ Attrs.src file.url
                     , Attrs.class "object-contain w-full h-full"
                     ]
                     []
                 ]
+        )
+
+
+videoFileView : File -> Html Msg
+videoFileView =
+    genericFileView
+        (\file ->
+            Html.div
+                [ Attrs.class "max-w-[200px] max-h-[200px]" ]
+                [ Html.video
+                    [ Attrs.class "object-contain w-full h-full" ]
+                    [ Html.source
+                        [ Attrs.src file.url
+                        , Attrs.type_ file.mimetype
+                        ]
+                        []
+                    ]
+                ]
+        )
+
+
+otherFileView : File -> Html Msg
+otherFileView =
+    genericFileView
+        (\file ->
+            Html.div
+                [ Attrs.class "font-bold text-[14px]" ]
+                [ Html.text "File" ]
+        )
+
+
+genericFileView : (File -> Html Msg) -> File -> Html Msg
+genericFileView specificFileView file =
+    Html.div
+        [ Attrs.class "flex flex-col text-[12px] text-gray-600 p-2 border-2 rounded border-orange-300 bg-orange-200 cursor-pointer hover:border-orange-400 hover:bg-orange-300" ]
+        [ Html.a
+            [ Attrs.href file.url
+            , Attrs.target "_blank"
+            , Attrs.class "flex flex-col gap-2"
             ]
-        , Html.div [] [ Html.text file.name ]
-        , Html.div [] [ Html.text <| "Size: " ++ String.fromInt file.size ++ " B" ]
+            [ specificFileView file
+            , Html.div []
+                [ Html.div [] [ Html.text file.name ]
+                , Html.div [] [ Html.text <| "Size: " ++ humanReadableFilesize file.size ]
+                ]
+            ]
         ]
 
 
@@ -658,7 +723,7 @@ reactionsView reactions =
 reactionView : Reaction -> Html Msg
 reactionView reaction =
     Html.div
-        [ Attrs.class "rounded flex gap-2 bg-orange-200 border-orange-400 border py-1 px-2 text-[12px]" ]
+        [ Attrs.class "rounded flex gap-2 bg-orange-200 border-orange-300 border py-1 px-2 text-[12px] hover:border-orange-400 hover:bg-orange-300" ]
         [ Html.div
             [ Attrs.class "font-bold" ]
             [ Html.text <| ":" ++ reaction.emoji ++ ":" ]

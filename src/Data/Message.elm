@@ -258,7 +258,19 @@ richTextElementDecoder =
                         Decode.field "elements" (Decode.list richTextElementDecoder)
                             |> Decode.map List.concat
 
+                    "rich_text_preformatted" ->
+                        Decode.field "elements" (Decode.list richTextElementDecoder)
+                            |> Decode.map (List.concat >> Preformatted >> List.singleton)
+
+                    "text" ->
+                        Decode.field "text" Decode.string
+                            |> Decode.map (Text >> List.singleton)
+
                     _ ->
+                        let
+                            _ =
+                                Debug.log "unknown" type_
+                        in
                         Decode.fail <| "Unknown rich text element type: '" ++ type_ ++ "'"
             )
 
